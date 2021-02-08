@@ -18,7 +18,7 @@ router.get("/login", (req, res) => {
     <form action="/auth/login" method="post">
         <p><input type="text" name="email" placeholder="email"></p>
         <p>
-            <input type="text" name="password" placeholder="password">
+            <input type="password" name="password" placeholder="password">
         </p>
         <p>
         <input type="submit">
@@ -31,18 +31,18 @@ router.get("/login", (req, res) => {
   res.send(html);
 });
 
-router.post("/login", (req, res) => {
-  const body = req.body;
-  if (body.email === authData.email && body.password === authData.password) {
-    req.session.logined = true;
-    req.session.nickname = authData.nickname;
-    req.session.save(() => {
-      res.redirect("/");
-    });
-  } else {
-    res.send("Who?");
-  }
-});
+// router.post("/login", (req, res) => {
+//   const body = req.body;
+//   if (body.email === authData.email && body.password === authData.password) {
+//     req.session.logined = true;
+//     req.session.nickname = authData.nickname;
+//     req.session.save(() => {
+//       res.redirect("/");
+//     });
+//   } else {
+//     res.send("Who?");
+//   }
+// });
 
 router.get("/logout", (req, res) => {
   req.session.destroy((err) => {
