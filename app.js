@@ -3,16 +3,13 @@ const compression = require("compression");
 const cookieParser = require("cookie-parser");
 const path = require("path");
 const logger = require("morgan");
-
+const helmet = require("helmet");
 const fs = require("fs");
+
 const express = require("express");
 const session = require("express-session");
-const FileStore = require("session-file-store")(session);
-const helmet = require("helmet");
-
-const indexRouter = require("./routes/index");
-const topicRouter = require("./routes/topic");
-const authRouter = require("./routes/auth");
+// const FileStore = require("session-file-store")(session);
+const flash = require("connect-flash");
 
 const app = express();
 const port = 3000;
@@ -34,65 +31,12 @@ app.use(
   })
 );
 
-// authData
-const authData = {
-  email: "auddlf419@naver.com",
-  password: "auddlf123",
-  nickname: "myeongil",
-};
+app.use(flash());
 
-// passport import
-const passport = require("passport");
-const LocalStrategy = require("passport-local").Strategy;
-
-// passport initialize and use session
-app.use(passport.initialize());
-app.use(passport.session());
-
-// serialize user
-// save user identifier in sessions
-passport.serializeUser(function (user, done) {
-  console.log("serializeUser", user);
-  // user.email = user identifier => save data in sessions
-  done(null, user.email);
-});
-
-// When visit page, active this function
-// In session, user's data is id
-passport.deserializeUser(function (id, done) {
-  console.log("deserializeUser", id);
-  // Add authData in request's user
-  done(null, authData);
-});
-
-passport.use(
-  // username, password settings
-  new LocalStrategy(
-    { usernameField: "email", passwordField: "password" },
-    // compare usename and password
-    function (username, password, done) {
-      console.log("LocalStartegy", username, password);
-      if (username === authData.email) {
-        if (password === authData.password) {
-          return done(null, authData);
-        } else {
-          return done(null, false, { message: "Incorrect password." });
-        }
-      } else {
-        return done(null, false, { message: "Incorrect username." });
-      }
-    }
-  )
-);
-
-// login event process
-app.post(
-  "/auth/login",
-  passport.authenticate("local", {
-    successRedirect: "/",
-    failureRedirect: "/auth/login",
-  })
-);
+const passport = require("./lib/passport")(app);
+const indexRouter = require("./routes/index");
+const topicRouter = require("./routes/topic");
+const authRouter = require("./routes/auth")(passport);
 
 app.get("*", (req, res, next) => {
   fs.readdir("./data", function (error, filelist) {
