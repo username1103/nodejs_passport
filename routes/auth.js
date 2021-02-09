@@ -2,19 +2,20 @@ const express = require("express");
 const router = express.Router();
 const template = require("../lib/template");
 
-const authData = {
-  email: "auddlf419@naver.com",
-  password: "auddlf123",
-  nickname: "myeongil",
-};
-
-router.get("/login", (req, res) => {
-  const title = "WEB - login";
-  const list = template.list(req.list);
-  var html = template.HTML(
-    title,
-    list,
-    `
+module.exports = function (passport) {
+  router.get("/login", (req, res) => {
+    const fmsg = req.flash();
+    let feedback = "";
+    if (fmsg.error) {
+      feedback = fmsg.error[0];
+    }
+    const title = "WEB - login";
+    const list = template.list(req.list);
+    var html = template.HTML(
+      title,
+      list,
+      `
+    <div class="feedback">${feedback}</div>
     <form action="/auth/login" method="post">
         <p><input type="text" name="email" placeholder="email"></p>
         <p>
@@ -25,29 +26,26 @@ router.get("/login", (req, res) => {
         </p>
     </form>
     `,
-    "",
-    `<a href="/auth/login">login</a>`
+      "",
+      `<a href="/auth/login">login</a>`
+    );
+    res.send(html);
+  });
+
+  // login event process
+  router.post(
+    "/login",
+    passport.authenticate("local", {
+      successRedirect: "/",
+      failureRedirect: "/auth/login",
+      failureFlash: true,
+    })
   );
-  res.send(html);
-});
 
-// router.post("/login", (req, res) => {
-//   const body = req.body;
-//   if (body.email === authData.email && body.password === authData.password) {
-//     req.session.logined = true;
-//     req.session.nickname = authData.nickname;
-//     req.session.save(() => {
-//       res.redirect("/");
-//     });
-//   } else {
-//     res.send("Who?");
-//   }
-// });
-
-router.get("/logout", (req, res) => {
-  req.session.destroy((err) => {
+  router.get("/logout", (req, res) => {
+    req.logout();
     res.redirect("/");
   });
-});
 
-module.exports = router;
+  return router;
+};
